@@ -8,3 +8,7 @@ class HTTPException(Exception):
 
 class SunriseSunsetAPIError(Exception):
     pass
+
+
+class WillowException(Exception):
+    pass

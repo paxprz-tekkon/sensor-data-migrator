@@ -1,17 +1,14 @@
 import typing
+import boto3
 import logging.config
 import sqlalchemy as sa
 import os
+
 # import boto3
+from mypy_boto3_dynamodb.service_resource import DynamoDBServiceResource
 from core.connections import PostgresConnection
 from functools import partial
 from dotenv import load_dotenv
-# from plantscore.queue import SQSJobQueue
-
-# try:
-#     from mypy_boto3_sqs import SQSClient
-# except ImportError:
-#     SQSClient = typing.NewType("SQSClient", typing.Any)
 
 load_dotenv()
 
@@ -55,17 +52,28 @@ def get_sql_engine():
     return engine
 
 
-# sqs_client = boto3.resource("sqs", **(dict(region_name=region) if region else dict()))
+DYNAMODB_SENSOR_DATA_TABLE = "Sensor-Data-Archive"
+DYNAMODB_DAILY_SENSOR_DATA_TABLE = "Daily-Sensor-Data-Archive"
+DYNAMODB_PLANT_SCORE_TABLE = "Plant-Score-Archive"
+DYNAMODB_PLANT_TEMPERATURE_SCORE_TABLE = "Plant-Temperature-Score-Archive"
+DYNAMODB_PLANT_HUMIDITY_SCORE_TABLE = "Plant-Humidity-Score-Archive"
+DYNAMODB_PLANT_MOISTURE_SCORE_TABLE = "Plant-Moisture-Score-Archive"
+DYNAMODB_PLANT_LIGHT_SCORE_TABLE = "Plant-Light-Score-Archive"
 
-# def get_sqs_client() -> SQSClient:
-#     if not sqs_client:
-#         raise Exception("SQS client not defined")
-#     return sqs_client
+
+config = {}
+
+if region := os.getenv("X_AWS_REGION"):
+    config["region_name"] = region
+
+if access_key := os.getenv("X_AWS_ACCESS_KEY_ID"):
+    config["aws_access_key_id"] = access_key
+
+if secret_key := os.getenv("X_AWS_SECRET_ACCESS_KEY"):
+    config["aws_secret_access_key"] = secret_key
 
 
-# SQS_QUEUE_NAME = os.getenv("SQS_QUEUE_NAME", None)
-
+dynamodb_resource: DynamoDBServiceResource = boto3.resource("dynamodb", **config)
 
 # SELECT SOURCE AND DESTINATION DATABASE
 PostgresDatabase = partial(PostgresConnection, get_database_engine=get_sql_engine)
-# JobQueue = SQSJobQueue(get_sqs_client, queue_name=SQS_QUEUE_NAME)

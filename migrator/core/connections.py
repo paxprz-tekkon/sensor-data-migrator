@@ -1,5 +1,6 @@
 import logging
 import typing
+from mypy_boto3_dynamodb.service_resource import Table
 from core import exceptions as exc
 import psycopg2
 import contextlib
@@ -62,3 +63,23 @@ class PostgresConnection:
         if not self._execute:
             raise ValueError("Have no query to execute")
         return self.fetchone()[pos]
+
+
+class DynamoDBWrite:
+
+    def __init__(self, get_dynamo_table: typing.Callable[[], Table]):
+        self.table = get_dynamo_table()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type:
+            raise
+
+    def execute(self, query, values):
+        if query == "put_item":
+            for value in values:
+                self.table.put_item(Item=value)
+        else:
+            raise exc.WillowException(f"Invalid query: {query} for DynamoDBWrite")
